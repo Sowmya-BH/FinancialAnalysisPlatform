@@ -59,6 +59,25 @@ parse_json:
     Returns all the values of the input field from the JSON file and summarizes it.
   agent: JSON_data_extractor
   content: "{{ parse_pdf.result }}"
+
+answer_query:
+  description: >
+    Utilize the structured financial data in the JSON file to answer the user's final query: {user_query}.
+    The agent must read the file and extract, analyze, and synthesize the relevant
+    information to provide a comprehensive answer.
+
+  expected_output: >
+    A natural language answer that directly addresses the user's query, citing 
+    and summarizing the extracted financial values from the JSON data.
+
+  agent: financial_analyst_agent
+
+  context : [parse_pdf]
+  input:
+    json_file_path: "{{ parse_pdf.result }}"
+    user_query: "{{ user_query }}" # Using the original input field as the user's query
+
+
 #answer_question_from_pdf:
 #  description: |
 #    You will analyze the financial PDF document located at the given path.
