@@ -82,7 +82,6 @@ class Find_Next_Text_Node(BaseTool):
             "values": results
         }
 
-    # ---------------- FIXED FUNCTION -----------------
     def find_all_next_text_nodes(self, json_data, target_key, target_value):
         """
         Recursively scans JSON and returns ALL 'text' nodes AFTER a given key-value match.
