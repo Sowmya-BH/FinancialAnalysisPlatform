@@ -39,6 +39,8 @@ def main():
     inputs = {
         'pdf_path': str(DOCUMENT_PATH),
         'input_field': 'Total gross profit',
+        'user_query' : 'Analysis on Total gross profit '
+
         # 'output_path':str(JSON_OUTPUT_PATH)
     }
 
