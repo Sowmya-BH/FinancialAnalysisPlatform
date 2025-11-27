@@ -52,59 +52,68 @@ class Find_Next_Text_NodeInput(BaseModel):
     value: str = Field(..., description="The field to search for in the JSON file")
 
 
+class Find_Next_Text_NodeInput(BaseModel):
+    """Input schema for find_next_text_node."""
+    file_name_json: str = Field(..., description="Name of the JSON file to parse")
+    value: str = Field(..., description="The field to search for in the JSON file")
+
+
 class Find_Next_Text_Node(BaseTool):
     name: str = "find_next_text_node"
     description: str = (
-        "Recursively searches for a key-value pair in JSON and returns the next node with key 'text'"
+        "Recursively searches a JSON file and returns ALL 'text' values that appear AFTER a target value."
     )
     args_schema: Type[BaseModel] = Find_Next_Text_NodeInput
 
-    # def _run(self, input_pdf: str, value: str) -> str:
     def _run(self, file_name_json: str, value: str) -> str:
-        # Implementation goes here
-        print("file name json: ", file_name_json)
+        print("JSON file:", file_name_json)
 
-        with open(file_name_json, "r") as file:
-            data = json.load(file)
+        with open(file_name_json, "r") as f:
+            data = json.load(f)
 
-        next_text_node = self.find_next_text_node_func(data, 'text', value)
+        results = self.find_all_next_text_nodes(data, "text", value)
 
-        return f"The value of {value} is {next_text_node['text']}"
+        if not results:
+            return f"No values found after '{value}'."
 
-    def find_next_text_node_func(self, json_data, target_key, target_value):
+        return {
+            "keyword": value,
+            "count": len(results),
+            "values": results
+        }
+
+    # ---------------- FIXED FUNCTION -----------------
+    def find_all_next_text_nodes(self, json_data, target_key, target_value):
         """
-        Recursively searches for a key-value pair in JSON and returns the next node with key 'text'.
-
-        :param json_data: The JSON object (dict or list).
-        :param target_key: The key to search for (e.g., "text").
-        :param target_value: The value to match (e.g., "CO2 Total").
-        :return: The next node with key "text" after the matched node, or None if not found.
+        Recursively scans JSON and returns ALL 'text' nodes AFTER a given key-value match.
         """
-        found_target = False  # Flag to track if we've found the target node
+
+        results = []
+        found_target = False
 
         def recursive_search(node):
-            nonlocal found_target  # Allow modifying the flag inside the nested function
+            nonlocal found_target
 
+            # Case 1: Node is a dictionary
             if isinstance(node, dict):
-                for key, value in node.items():
-                    if key == target_key and value == target_value:
-                        found_target = True  # Mark that we found the target
+                for key, val in node.items():
 
-                    elif key == "text" and found_target:  # Return the first "text" node found after target
-                        return node
+                    # When we hit the target key/value
+                    if key == target_key and val == target_value:
+                        found_target = True
 
-                    elif isinstance(value, (dict, list)):
-                        result = recursive_search(value)
-                        if result:
-                            return result
+                    # Collect ALL "text" values after first occurrence
+                    elif key == "text" and found_target:
+                        results.append(val)
 
+                    # Recurse deeper
+                    if isinstance(val, (dict, list)):
+                        recursive_search(val)
+
+            # Case 2: Node is a list
             elif isinstance(node, list):
                 for item in node:
-                    result = recursive_search(item)
-                    if result:
-                        return result
+                    recursive_search(item)
 
-            return None  # Return None if no match is found
-
-        return recursive_search(json_data)
-
+        recursive_search(json_data)
+        return results
