@@ -83,6 +83,14 @@ class CkdV3():
             llm=llm,
         )
 
+     @agent
+    def financial_analyst_agent(self) -> Agent:
+        return Agent(
+            config=self.agents_config['financial_analyst_agent'],
+            verbose=True,
+            tools=[],
+            llm=llm,
+        )
     # To learn more about structured task outputs,
     # task dependencies, and task callbacks, check out the documentation:
     # https://docs.crewai.com/concepts/tasks#overview-of-a-task
@@ -98,6 +106,14 @@ class CkdV3():
             config=self.tasks_config['parse_json'],
             context=[self.parse_pdf()],
             output_file = 'output.md',
+        )
+
+    @task
+    def answer_query(self) -> Task:
+        return Task(
+            config=self.tasks_config['answer_query'],
+            context=[self.parse_pdf()],
+            output_file='summary.md',
         )
     # @task
     # def parse_pdf(self) -> Task:
