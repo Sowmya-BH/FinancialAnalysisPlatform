@@ -1,0 +1,182 @@
+
+# config/tasks.yaml
+
+#parse_pdf:
+#  description: >
+#    Utilize the 'docling_pdf_to_json' tool to process the financial PDF located
+#    at '{{ pdf_path }}'. The tool requires the 'output_dir' variable (currently set to
+#    '{{ output_dir }}') to specify where to save the resulting JSON file
+##    Utilize IBM Docling to process the input financial document, extracting all
+##    relevant financial data, tables, and text structure the financial PDF located
+##    at pdf_path: "{{ pdf_path }}
+#    The final output MUST be a clean, structured JSON object containing all extracted data,
+#    ready for the next agent to parse.
+#  expected_output: >
+#    A comprehensive JSON string or file path containing the structured document data.
+#  agent: docling_agent
+#  input:
+#    pdf_path: "{{ pdf_path }}"
+
+#write_parsed_output:
+#  description: >
+#    Write the output from the parse_pdf task into a file
+#  expected_output: >
+#    A markdown file named 'parsed_financial_document.json' in the current directory.
+#  agent: file_writer_agent
+#  input:
+#    filename: "parsed_financial_document.json"
+#    directory: "./outputs"
+#    overwrite: true
+#    content: "{{ parse_pdf.output }}"
+#  tools:
+#    - FileWriterTool
+
+parse_pdf:
+  description: >
+    Process the financial PDF located at {pdf_path} using the 'Docling'
+    tool. Pass 'pdf_file_name' (same as pdf_path)as input to the tool. 
+    After processing, return the **absolute path** of the generated JSON file
+    so the next task can safely consume it.
+
+  expected_output: >
+    A single string containing the absolute file path of the generated JSON file.
+    Example: /Users/.../knowledge/TSLA-Q2-2025-Update.json
+
+  agent: docling_agent
+
+  input:
+    pdf_file_name: {pdf_path}
+
+
+
+parse_json:
+  description: >
+    Parse the JSON file and extract value for the field: {input_field}.
+#    Analyze the JSON output provided by the previous task (parse_pdf).
+#    Extract the specific financial value corresponding to the {input_field} field.
+#    The output must ONLY contain the clean, extracted value (e.g., "$1.2B").
+  expected_output: >
+    Returns all the values of the input field from the JSON file and summarizes it.
+  agent: JSON_data_extractor
+  content: "{{ parse_pdf.result }}"
+#answer_question_from_pdf:
+#  description: |
+#    You will analyze the financial PDF document located at the given path.
+#    First, extract its content using the provided tools. Then answer the user’s
+#    question strictly based on the extracted or retrieved content.
+#
+#  expected_output: |
+#    A clear, concise, and accurate answer to the user's question.
+#    Include numeric values, highlights, and reasoning when relevant.
+#
+#  agent: financial_analyst
+#
+#  # Inputs dynamically passed from main.py
+#  inputs:
+#    pdf_path: "{{ pdf_path }}"
+#    question: "{{ question }}"
+
+
+## TASK 1: INGESTION (Assigned to financial_analyst)
+## This task focuses on using the ProcessPDFTool to get data INTO the system.
+#
+#
+#
+#
+#
+#
+#
+#analyze_pdf_task:
+#  description: |
+#    Use the process_pdf_tool to ingest and process the financial PDF located at: {pdf_path}.
+#    Ensure that all text content, metadata, and tables (especially Balance Sheets
+#    and Income Statements) are extracted, chunked, and stored in the database
+#    for future retrieval.
+#
+#    Verify that the document title is correctly identified to ensure clean data storage.
+#
+#  agent: financial_analyst
+#
+#  expected_output: |
+#    A confirmation message stating that the document has been successfully processed
+#    and stored in the MongoDB vector store. Include the document title, total pages,
+#    and the number of tables extracted.
+#
+## TASK 2: ANALYSIS (Assigned to investment_advisor)
+## This task focuses on using MongoSearchTool + CalculatorTool to get insights OUT.
+#calculate_ratios_and_assess_health_task:
+#  description: |
+#    Using the data processed in the analyze_pdf_task using process_pdf_tool and perform a deep financial health assessment:
+#
+#    1. **Data Retrieval**: Use the search tool to find specific values for the current
+#       and previous reporting periods:
+#       - Net Income
+#       - Total Assets
+#       - Shareholder's Equity
+#       - Operating Income
+#       - Total Revenue/Net Sales
+#       - Current Assets and Current Liabilities
+#
+#    2. **Ratio Calculation**: Use the calculator tool to compute the following with precision:
+#       - **Return on Equity (ROE):** (Net Income / Shareholder's Equity) * 100
+#       - **Return on Assets (ROA):** (Net Income / Total Assets) * 100
+#       - **Operating Margin:** (Operating Income / Revenue) * 100
+#       - **Current Ratio:** (Current Assets / Current Liabilities)
+#
+#    3. **Analysis**: Compare these metrics to standard benchmarks or previous year data (if available in the text)
+#       to summarize the company's financial health.
+#
+#  agent: investment_advisor_agent
+#
+#  context: [analyze_pdf_task] # This ensures Task 2 waits for Task 1
+#
+#  expected_output: |
+#    A detailed financial report in Markdown format containing:
+#    1. A table summarizing the extracted raw figures (Revenue, Assets, etc.).
+#    2. A table presenting the calculated ratios (ROE, ROA, Margins).
+#    3. A qualitative summary paragraph explaining whether the company is financially
+#       healthy based on these ratios (e.g., is profitability increasing? is liquidity sufficient?).
+##analyze_pdf_task:
+##  description: |
+##    Analyze the provided PDF file path and extract metadata, tables, and text
+##    using the pdf_ingestion_tool.
+##    Input will be: {'pdf_path': '<FILEPATH>'}
+##
+##  # References the 'document_analysis_agent' defined elsewhere (e.g., in an agents.yaml file)
+##  agent: financial_analyst
+##
+##  expected_output: |
+##    A structured summary of the PDF based on the extracted metadata, number of pages,
+##    tables extracted, and text.
+#
+##analyze_pdf_task:
+##  description: >
+##    Analyze the provided PDF file path and extract metadata, tables, and text
+##    using the pdf_ingestion_tool. Input will be:
+##    {'pdf_path': '<FILEPATH>'}
+##    This includes examining key financial metrics such as
+##    P/E ratio, EPS growth, revenue trends, and debt-to-equity ratio.
+##  agent: financial_analyst
+##  expected_output: >
+##    The final report must expand on the summary provided and now
+##    including a clear assessment of the financial standing based on the uploaded PDF file, its strengths and weaknesses,
+
+#full_financial_analysis_task:
+#  description:|
+#    "Answer the following questions about the papers: { question }
+#            Input will be {'pdf_path': '<FILEPATH>'}"
+#  agent: financial_analyst
+#  expected_output:"An answer to the question."
+#  description: |
+#    Perform a complete financial analysis of the PDF located at: {pdf_path}. This task
+#    must summarize the PDF to provide
+#    **Summarization and Analysis:** Provide Key Financial Highlights (e.g., revenue changes, profitability)
+#       and Operational & Strategic Highlights (e.g., Robotaxi, new models). Analyze the key
+#       ratios to assess the company's overall financial health (liquidity and profitability).
+#  agent: financial_analyst
+#  expected_output: |
+#    A detailed financial report in Markdown format containing:
+#    1. A table summarizing the extracted raw financial figures (clearly labeled).
+#    2. A table presenting the calculated ratios (ROE, ROA, Margins, Current Ratio).
+#    3. A section for 'Key Financial Highlights' and 'Operational & Strategic Highlights'.
+#    4. A concluding paragraph summarizing the company's financial health and outlook based on the data.
