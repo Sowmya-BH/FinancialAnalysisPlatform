@@ -1,0 +1,18 @@
+process_pdf_task:
+  description: |
+    Use the ProcessPDFTool to extract sections from the PDF,
+    embed them using Gemini, and store embeddings in MongoDB.
+    The file to process is: {DOCUMENT_PATH}
+  expected_output: "A confirmation message containing page count and sections processed."
+  output_key: pdf_processing_status
+  agent: pdf_processor_agent
+
+# 2. Task to perform a RAG search query
+rag_search_task:
+  description: |
+    Search the financial documents for: '{query}'.
+    Use the MongoDB vector search tool to find the most relevant chunks
+    and answer clearly.
+  expected_output: "A precise answer with references to retrieved sections."
+  output_key: search_result
+  agent: rag_search_agent
